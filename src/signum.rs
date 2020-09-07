@@ -25,6 +25,16 @@ impl BitXor for Sgn0Result {
     }
 }
 
+impl From<bool> for Sgn0Result {
+    fn from(neg: bool) -> Self {
+        if neg {
+            Self::Negative
+        } else {
+            Self::NonNegative
+        }
+    }
+}
+
 /// Signum computations and conditional in-place negation
 pub trait Signum0: Field {
     /// Returns either Negative or NonNegative

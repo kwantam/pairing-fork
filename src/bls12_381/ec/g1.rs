@@ -1,5 +1,7 @@
 use super::super::{Bls12, Fq, Fq12, FqRepr, Fr, FrRepr};
 use super::g2::G2Affine;
+use crate::signum::{Sgn0Result, Signum0};
+
 use ff::{BitIterator, Field, PrimeField, PrimeFieldRepr, SqrtField};
 use std::fmt;
 use {CurveAffine, CurveProjective, EncodedPoint, Engine, GroupDecodingError, SubgroupCheck};
@@ -185,9 +187,8 @@ impl EncodedPoint for G1Compressed {
                 Err(GroupDecodingError::UnexpectedInformation)
             }
         } else {
-            // Determine if the intended y coordinate must be greater
-            // lexicographically.
-            let greatest = copy[0] & (1 << 5) != 0;
+            // Determine if the intended y coordinate must be "negative"
+            let sign_of_result = (copy[0] & (1 << 5) != 0).into();
 
             // Unset the three most significant bits.
             copy[0] &= 0x1f;
@@ -204,7 +205,7 @@ impl EncodedPoint for G1Compressed {
             let x = Fq::from_repr(x)
                 .map_err(|e| GroupDecodingError::CoordinateDecodingError("x coordinate", e))?;
 
-            G1Affine::get_point_from_x(x, greatest).ok_or(GroupDecodingError::NotOnCurve)
+            G1Affine::get_point_from_x(x, sign_of_result).ok_or(GroupDecodingError::NotOnCurve)
         }
     }
     fn from_affine(affine: G1Affine) -> Self {
@@ -221,12 +222,8 @@ impl EncodedPoint for G1Compressed {
                 affine.x.into_repr().write_be(&mut writer).unwrap();
             }
 
-            let mut negy = affine.y;
-            negy.negate();
-
-            // Set the third most significant bit if the correct y-coordinate
-            // is lexicographically largest.
-            if affine.y > negy {
+            // Set the third most significant bit if the correct y-coordinate is "negative"
+            if affine.y.sgn0() == Sgn0Result::Negative {
                 res.0[0] |= 1 << 5;
             }
         }

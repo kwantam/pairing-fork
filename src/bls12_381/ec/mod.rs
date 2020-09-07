@@ -132,20 +132,18 @@ macro_rules! curve_impl {
             ///
             /// If and only if `greatest` is set will the lexicographically
             /// largest y-coordinate be selected.
-            fn get_point_from_x(x: $basefield, greatest: bool) -> Option<$affine> {
+            fn get_point_from_x(x: $basefield, sign_of_result: Sgn0Result) -> Option<$affine> {
                 // Compute x^3 + b
                 let mut x3b = x;
                 x3b.square();
                 x3b.mul_assign(&x);
                 x3b.add_assign(&$affine::get_coeff_b());
 
-                x3b.sqrt().map(|y| {
-                    let mut negy = y;
-                    negy.negate();
-
+                x3b.sqrt().map(|mut y| {
+                    y.negate_if(y.sgn0() ^ sign_of_result);
                     $affine {
                         x,
-                        y: if (y < negy) ^ greatest { y } else { negy },
+                        y,
                         infinity: false,
                     }
                 })
@@ -654,8 +652,8 @@ macro_rules! curve_impl {
             fn random<R: rand_core::RngCore>(rng: &mut R) -> Self {
                 loop {
                     let x = $basefield::random(rng);
-                    let greatest = rng.next_u32() % 2 != 0;
-                    if let Some(p) = $affine::get_point_from_x(x, greatest) {
+                    let sign_of_result = (rng.next_u32() % 2 != 0).into();
+                    if let Some(p) = $affine::get_point_from_x(x, sign_of_result) {
                         let p = p.scale_by_cofactor();
 
                         if !p.is_zero() {
