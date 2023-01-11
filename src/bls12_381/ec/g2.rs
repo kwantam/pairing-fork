@@ -345,16 +345,33 @@ pub struct G2Prepared {
 }
 
 mod subgroup_check {
+    use super::super::super::cofactor::{chain_z, psi};
     use super::G2Affine;
     #[cfg(test)]
-    use rand_core::SeedableRng;
-    #[cfg(test)]
-    use CurveAffine;
+    use rand::SeedableRng;
+    use {CurveAffine, CurveProjective};
     use SubgroupCheck;
 
     impl SubgroupCheck for G2Affine {
+        fn in_subgroup_bowe19(&self) -> bool {
+            if !self.is_on_curve() {
+                return false;
+            }
+            let mut pp = self.into_projective();
+            let mut q = pp;
+            psi(&mut pp); // pp = psi(P)
+            psi(&mut pp); // pp = psi(pp)
+            q.sub_assign(&pp); // Q = P - pp
+            psi(&mut pp); // pp = psi(pp)
+            let tmp = pp;
+            chain_z(&mut pp, &tmp); // pp = -z * pp
+            q.sub_assign(&pp); // Q = Q - pp
+            q.is_zero()
+        }
         fn in_subgroup(&self) -> bool {
-            self.is_on_curve() && self.is_in_correct_subgroup_assuming_on_curve()
+            // classic (slow) check: multiply by subgroup order
+            //self.is_on_curve() && self.is_in_correct_subgroup_assuming_on_curve()
+            self.in_subgroup_bowe19()
         }
     }
 
@@ -471,6 +488,8 @@ fn g2_test_is_valid() {
             infinity: false,
         };
         assert!(!p.is_on_curve());
+        assert!(!p.in_subgroup_bowe19());
+        assert!(p.in_subgroup_bowe19() == p.in_subgroup());
     }
 
     // Reject point on a twist (b = 2 * (u + 1))
@@ -520,6 +539,7 @@ fn g2_test_is_valid() {
         };
         assert!(!p.is_on_curve());
         assert!(!p.in_subgroup());
+        assert!(p.in_subgroup_bowe19() == p.in_subgroup());
     }
 
     // Reject point in an invalid subgroup

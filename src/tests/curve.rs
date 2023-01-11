@@ -618,8 +618,8 @@ fn test_g1_sum_of_products() {
             let scalars: Vec<&[u64; 4]> = scalars_fr_repr.iter().map(|s| &s.0).collect();
 
             let mut desired_result = G1::zero();
-            for i in 0..num_points {
-                desired_result.add_assign_mixed(&points[i]);
+            for next_point in points.iter().take(num_points) {
+                desired_result.add_assign_mixed(next_point);
             }
 
             for window in 1..10 {
@@ -654,9 +654,9 @@ fn test_g1_sum_of_products() {
             let scalars: Vec<&[u64; 4]> = scalars_fr_repr.iter().map(|s| &s.0).collect();
 
             let mut desired_result = G1::zero();
-            for i in 0..num_points {
+            for (i, next_point) in points.iter().enumerate().take(num_points) {
                 if i % 2 == 1 {
-                    desired_result.add_assign_mixed(&points[i]);
+                    desired_result.add_assign_mixed(next_point);
                 }
             }
 
@@ -988,8 +988,8 @@ fn test_g2_sum_of_products() {
             let scalars: Vec<&[u64; 4]> = scalars_fr_repr.iter().map(|s| &s.0).collect();
 
             let mut desired_result = G2::zero();
-            for i in 0..num_points {
-                desired_result.add_assign(&points[i].into_projective());
+            for next_point in points.iter().take(num_points) {
+                desired_result.add_assign(&next_point.into_projective());
             }
             let res_no_precomp = G2Affine::sum_of_products(&points[0..num_points], &scalars);
             assert_eq!(
@@ -1021,9 +1021,9 @@ fn test_g2_sum_of_products() {
             let scalars: Vec<&[u64; 4]> = scalars_fr_repr.iter().map(|s| &s.0).collect();
 
             let mut desired_result = G2::zero();
-            for i in 0..num_points {
+            for (i, next_point) in points.iter().enumerate().take(num_points) {
                 if i % 2 == 1 {
-                    desired_result.add_assign(&points[i].into_projective());
+                    desired_result.add_assign(&next_point.into_projective());
                 }
             }
             let res_no_precomp = G2Affine::sum_of_products(&points[0..num_points], &scalars);

@@ -3,7 +3,7 @@ name = "pairing-plus"
 
 # Remember to change version string in README.md.
 
-version = "0.20.1"
+version = "0.20.2"
 authors = [
     # authors of the original pairing library
     "Sean Bowe <ewillbefull@gmail.com>",
@@ -32,11 +32,11 @@ homepage = "https://github.com/algorand/pairing-plus"
 repository = "https://github.com/algorand/pairing-plus"
 
 [dependencies]
-rand = "0.4"
+rand = "0.7"
+rand_core = "0.5"
 byteorder = "1"
 ff-zeroize = { version = "0.6.3", features = ["derive"]}
 zeroize = { version  = "1.1", features = ["zeroize_derive"]}
-rand_core = "0.5"
 rand_xorshift = "0.2"
 
 [dependencies.digest]

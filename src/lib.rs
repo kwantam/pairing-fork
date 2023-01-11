@@ -15,6 +15,7 @@
 
 extern crate digest;
 extern crate ff_zeroize as ff;
+extern crate rand;
 extern crate rand_core;
 extern crate rand_xorshift;
 #[cfg(test)]
@@ -386,8 +387,11 @@ pub trait EncodedPoint:
 }
 
 pub trait SubgroupCheck {
-    /// subgroup membership check using classical method:
-    /// i.e., raise to the power of group order
+    /// Subgroup membership check using Sean Bowe's algorithm
+    /// https://eprint.iacr.org/2019/814
+    fn in_subgroup_bowe19(&self) -> bool;
+
+    /// subgroup membership check (method unspecified)
     fn in_subgroup(&self) -> bool;
 }
 
